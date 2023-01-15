@@ -22,7 +22,7 @@ class Sentiment:
             #self.translate = pipeline(model='Helsinki-NLP/opus-mt-mt-en')
 
     def get_sentiment(self, msg):
-        if msg == '': return None, None
+        if msg == '': return 'unclassified', 0
 
         msg = self.translate(msg).text if self.do_translate else msg
         sentiment = self.sent_pl(msg)[0]

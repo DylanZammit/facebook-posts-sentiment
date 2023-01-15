@@ -99,7 +99,10 @@ class FacebookScraper:
                 num_sad = reactions.get('sad', 0)
                 num_reacts = post.get('reaction_count', 0)
 
-                sent_label, sent_score = None, None if not do_sentiment else sent.get_sentiment(caption)
+                if do_sentiment:
+                    sent_label, sent_score = sent.get_sentiment(caption)
+                else:
+                    sent_label, sent_score = None, None
 
                 page_posts.append(
                     Post(
