@@ -9,23 +9,20 @@ from googletrans import Translator
 
 class Sentiment:
 
-    def __init__(self, do_sentiment=False, do_translate=True):
-        self.do_sentiment = do_sentiment
+    def __init__(self, do_translate=True):
         self.do_translate = do_translate
 
-        if do_sentiment:
-            self.sent_pl = pipeline(
-                    model='cardiffnlp/twitter-roberta-base-sentiment-latest',
-                    max_length=512,
-                    truncation=True
-                )
-            if do_translate:
-                self.translate = Translator().translate if do_translate else dummy(1)
-                #self.translate = pipeline(model='Helsinki-NLP/opus-mt-mt-en')
+        self.sent_pl = pipeline(
+                model='cardiffnlp/twitter-roberta-base-sentiment-latest',
+                max_length=512,
+                truncation=True
+            )
+        if do_translate:
+            self.translate = Translator().translate
+            #self.translate = pipeline(model='Helsinki-NLP/opus-mt-mt-en')
 
     def get_sentiment(self, msg):
-        if msg == '' or not self.do_sentiment:
-            return None, None
+        if msg == '': return None, None
 
         msg = self.translate(msg).text if self.do_translate else msg
         sentiment = self.sent_pl(msg)[0]

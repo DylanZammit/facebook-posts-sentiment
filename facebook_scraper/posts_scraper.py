@@ -9,14 +9,14 @@ from entities import Post
 from utils import time_it, rsleep, Sentiment
 import pandas as pd
 
+
+
 class FacebookScraper:
 
     def __init__(
             self, 
             cookies=None, 
             posts_per_page=50, 
-            do_sentiment=False, 
-            do_translate=False
         ):
         """
         Creates FB instance by logging in
@@ -32,15 +32,21 @@ class FacebookScraper:
         fs.set_user_agent(user_agent)
 
         self.posts_per_page = posts_per_page
-        self.sent = Sentiment(do_sentiment, do_translate)
 
-    def scrape_posts(self, page_name, num_posts=None, since=None):
+        # Should not be hardcoded!!!
+        self.translate_pages = ['newsbook.com.mt', 'TelevisionMalta', 'ONE.com.mt', 'NetNewsMalta']
+
+    def scrape_posts(self, page_name, num_posts=None, since=None, do_sentiment=True):
         '''
         scrapes facebook posts of a particular page
         page_name - name of facebook page
         num_posts - number of posts to scrape
         since - scrape posts since since
         '''
+        if do_sentiment:
+            do_translate = page_name in self.translate_pages
+            sent = Sentiment(do_translate)
+
         if since is None: since = pd.Timestamp('2000-01-01')
         if num_posts is None: num_posts = 1000000
 
@@ -93,7 +99,7 @@ class FacebookScraper:
                 num_sad = reactions.get('sad', 0)
                 num_reacts = post.get('reaction_count', 0)
 
-                sent_label, sent_score = self.sent.get_sentiment(caption)
+                sent_label, sent_score = None, None if not do_sentiment else sent.get_sentiment(caption)
 
                 page_posts.append(
                     Post(
@@ -170,12 +176,13 @@ def get_posts(page_name, num_posts=None, since=None, do_sentiment=True):
 
     for i in range(5):
         print(f'Attempt #{i+1}')
-        extractor = FacebookScraper(cookies='cookies.txt', do_sentiment=do_sentiment)
+        extractor = FacebookScraper(cookies='cookies.txt')
 
         posts = extractor.scrape_posts(
             page_name=page_name,
             num_posts=num_posts,
-            since=since
+            since=since,
+            do_sentiment=do_sentiment,
         )
 
         if len(posts) > 0: break
@@ -191,7 +198,8 @@ def get_posts(page_name, num_posts=None, since=None, do_sentiment=True):
 
     return df_posts
 
-
+# malta facebook news pages
+# newsbook.com.mt,TelevisionMalta,ONE.com.mt,NetNewsMalta,maltatoday,timesofmalta,TheMaltaIndependent
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
@@ -206,16 +214,20 @@ if __name__ == '__main__':
 
     df = pd.DataFrame()
     for page in args.pages.split(','):
-        print(f'Reading {page} posts')
+        try:
+            print(f'Reading {page} posts')
 
-        df_posts = get_posts(
-            page, 
-            args.n_posts, 
-            since, 
-            args.sentiment,
-        )
+            df_posts = get_posts(
+                page,
+                args.n_posts,
+                since,
+                args.sentiment,
+            )
 
-        df = pd.concat([df, df_posts])
+            df = pd.concat([df, df_posts])
+        except Exception as e:
+            print(f'Error reading {page}')
+            print(format_exc())
 
     if args.store:
         df.to_csv(f'facebook_posts.csv')
