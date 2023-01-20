@@ -18,3 +18,8 @@ An example run would be as follows
 		--sentiment 
 		--store
 
+## Results
+
+Facebook posts for various Maltese news pages from 2022 were scraped, noting their number of reacts, comments, caption
+and post time. The sentiment of the captions were also gathered and the below dashboard illustrates the results.
+![dashboard](https://github.com/DylanZammit/facebook-scraper-wrapper/blob/master/image/dashboard.jpeg)
